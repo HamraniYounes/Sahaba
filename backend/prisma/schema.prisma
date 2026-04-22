@@ -1,0 +1,172 @@
+// Schéma de base de données Prisma avec support PostGIS
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  GUEST
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum LocationStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+  CLAIMED
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          UserRole  @default(USER)
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  
+  locations     Location[]
+  reviews       Review[]
+  favorites     Favorite[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  slug        String     @unique
+  icon        String
+  description String?
+  createdAt   DateTime   @default(now())
+  
+  locations   Location[]
+
+  @@map("categories")
+}
+
+model Location {
+  id          String         @id @default(uuid())
+  slug        String         @unique
+  name        String
+  address     String
+  city        String
+  postalCode  String?
+  country     String         @default("Belgique")
+  website     String?
+  phone       String?
+  email       String?
+  description String?
+  
+  // Coordonnées géographiques (PostGIS)
+  latitude    Float
+  longitude   Float
+  
+  // Statut et vérification
+  status      LocationStatus @default(PENDING)
+  verified    Boolean        @default(false)
+  verifiedAt  DateTime?
+  verifiedBy  String?
+  
+  // Métadonnées spécifiques (JSONB)
+  metadata    Json?
+  
+  // Horaires d'ouverture (JSON)
+  openingHours Json?
+  
+  // Relations
+  categoryId  String
+  category    Category      @relation(fields: [categoryId], references: [id])
+  userId      String?
+  user        User?         @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  reviews     Review[]
+  favorites   Favorite[]
+  images      LocationImage[]
+
+  @@index([city])
+  @@index([status])
+  @@map("locations")
+}
+
+model LocationImage {
+  id          String   @id @default(uuid())
+  locationId  String
+  url         String
+  alt         String?
+  isPrimary    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@map("location_images")
+}
+
+model Review {
+  id                  String   @id @default(uuid())
+  rating              Int      // 1-5
+  comment             String?
+  isVerifiedPurchase  Boolean  @default(false)
+  
+  userId              String
+  user                User     @relation(fields: [userId], references: [id])
+  locationId          String
+  location            Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([userId, locationId])
+  @@map("reviews")
+}
+
+model Favorite {
+  id          String   @id @default(uuid())
+  userId      String
+  locationId  String
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, locationId])
+  @@map("favorites")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  message     String
+  type        String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model RefreshToken {
+  id          String   @id @default(uuid())
+  token       String   @unique
+  userId      String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@map("refresh_tokens")
+}
