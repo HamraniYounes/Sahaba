@@ -1,108 +1,54 @@
-import { Page } from "../types";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-interface LegalPageProps {
-  onNavigate: (page: Page) => void;
-}
+const PAGES: Record<string, { title: string; body: { h: string; p: string }[] }> = {
+  cgu: {
+    title: "Conditions générales d'utilisation",
+    body: [
+      { h: "1. Objet", p: "Sahaba est un annuaire communautaire gratuit de lieux (restaurants halal, mosquées, commerces, services…) destiné à la communauté musulmane d'Europe. L'utilisation du service implique l'acceptation des présentes conditions." },
+      { h: "2. Compte utilisateur", p: "La création d'un compte est nécessaire pour proposer un lieu, publier un avis ou enregistrer des favoris. Vous êtes responsable de la confidentialité de vos identifiants et de l'exactitude des informations fournies." },
+      { h: "3. Contenus proposés", p: "Les lieux, photos et avis que vous publiez doivent être exacts, légaux et respectueux. Vous garantissez détenir les droits sur les photos envoyées. Sahaba se réserve le droit de modérer, modifier, refuser ou supprimer tout contenu sans préavis, notamment après signalement." },
+      { h: "4. Mentions « halal » et caractéristiques", p: "Les informations (halal, sans alcool, salle de prière…) sont déclaratives et fournies par les utilisateurs ou les propriétaires. Sahaba ne certifie pas ces informations et vous invite à les vérifier directement auprès de l'établissement." },
+      { h: "5. Réclamation d'un lieu", p: "Un propriétaire peut réclamer sa fiche en fournissant des justificatifs. Les documents sont conservés de manière privée et uniquement consultables par l'équipe de modération." },
+      { h: "6. Responsabilité", p: "Sahaba est fourni « en l'état ». Nous ne pouvons être tenus responsables des erreurs, omissions ou de l'indisponibilité du service, ni des relations entre utilisateurs et établissements." },
+      { h: "7. Contact", p: "Pour toute question : contact@sahaba.be." },
+    ],
+  },
+  rgpd: {
+    title: "Politique de confidentialité (RGPD)",
+    body: [
+      { h: "Responsable du traitement", p: "Sahaba — contact : legal@sahaba.be." },
+      { h: "Données collectées", p: "Adresse email, nom affiché, mot de passe (stocké sous forme chiffrée par le fournisseur d'authentification), contenus que vous publiez (lieux, photos, avis), favoris, justificatifs de réclamation, messages envoyés via le formulaire de contact. Votre position géographique est utilisée uniquement dans votre navigateur pour trier les lieux par distance ; elle n'est pas enregistrée." },
+      { h: "Finalités et bases légales", p: "Fourniture du service (exécution du contrat), modération et sécurité (intérêt légitime), réponse à vos demandes (intérêt légitime), publicité éventuelle (consentement)." },
+      { h: "Hébergement et sous-traitants", p: "Les données sont hébergées chez Supabase. Les tuiles de carte sont fournies par OpenStreetMap / CARTO ; le géocodage d'adresses utilise Nominatim (OpenStreetMap)." },
+      { h: "Durée de conservation", p: "Vos données sont conservées tant que votre compte existe. À la suppression du compte, votre profil, vos avis et vos favoris sont effacés ; les lieux que vous avez proposés sont conservés sans lien avec vous." },
+      { h: "Vos droits", p: "Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité. Vous pouvez supprimer votre compte à tout moment depuis votre profil, ou nous écrire à legal@sahaba.be. Vous pouvez introduire une réclamation auprès de l'Autorité de protection des données (Belgique) ou de l'autorité de votre pays." },
+      { h: "Cookies", p: "Sahaba utilise uniquement des cookies / stockages techniques (session, préférence de langue et de thème). Si des annonces tierces sont activées, leur fournisseur peut déposer des cookies soumis à votre consentement." },
+    ],
+  },
+  mentions: {
+    title: "Mentions légales",
+    body: [
+      { h: "Éditeur", p: "Sahaba — contact@sahaba.be. Les informations de l'éditeur (dénomination, adresse, numéro d'entreprise) sont à compléter avant la mise en production." },
+      { h: "Hébergement", p: "Application hébergée en France/Europe selon votre configuration ; base de données et authentification : Supabase." },
+      { h: "Propriété intellectuelle", p: "Le nom, le logo et le code de Sahaba sont protégés. Les contenus publiés par les utilisateurs restent leur propriété ; ils concèdent à Sahaba une licence d'affichage dans le cadre du service." },
+    ],
+  },
+};
 
-export function LegalPage({ onNavigate }: LegalPageProps) {
+export function LegalPage() {
+  const { page = "mentions" } = useParams();
+  const doc = PAGES[page];
+  if (!doc) return <Navigate to="/legal/mentions" replace />;
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <button
-        onClick={() => onNavigate("home")}
-        className="flex items-center gap-2 mb-8 transition-colors"
-        style={{ color: '#476E55' }}
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Retour à l'accueil
-      </button>
-
-      {/* Tabs */}
-      <div className="flex gap-2 mb-8 overflow-x-auto">
-        <button className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-white" style={{ backgroundColor: '#D4A843' }}>
-          Mentions légales
-        </button>
-        <button className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-white" style={{ backgroundColor: '#476E55' }}>
-          Politique de confidentialité
-        </button>
-        <button className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap text-white" style={{ backgroundColor: '#476E55' }}>
-          CGU
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-        <h1 className="text-3xl font-bold text-slate-900 mb-6">Mentions légales</h1>
-
-        <div className="prose prose-slate max-w-none">
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">1. Éditeur du site</h2>
-          <p className="text-slate-600 mb-4">
-            Le site SAHABA est édité par :<br />
-            <strong>SAHABA SPRL</strong><br />
-            Siège social : 123 Avenue de la Constitution, 1000 Bruxelles, Belgique<br />
-            Numéro d'entreprise : BE 0123.456.789<br />
-            Email : contact@sahaba.be
-          </p>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">2. Directeur de la publication</h2>
-          <p className="text-slate-600 mb-4">
-            Le directeur de la publication est Monsieur [Nom], en qualité de gérant de la société SAHABA SPRL.
-          </p>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">3. Hébergement</h2>
-          <p className="text-slate-600 mb-4">
-            Le site est hébergé par :<br />
-            <strong>OVHcloud</strong><br />
-            2 rue Kellermann<br />
-            59100 Roubaix - France
-          </p>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">4. Propriété intellectuelle</h2>
-          <p className="text-slate-600 mb-4">
-            L'ensemble du contenu du site SAHABA (textes, images, vidéos, logos, etc.) est protégé par le droit d'auteur 
-            et le droit des marques. Toute reproduction, représentation, modification, publication, adaptation de tout 
-            ou partie des éléments du site, quel que soit le moyen ou le procédé utilisé, est interdite sans autorisation 
-            écrite préalable.
-          </p>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">5. Disclaimer - Certification Halal</h2>
-          <div className="p-4 rounded-lg mb-4" style={{ backgroundColor: '#D4A843' + '15', borderLeft: '4px solid #D4A843' }}>
-            <p className="text-slate-700 font-medium">
-              SAHABA est un agrégateur d'informations et non un organisme certificateur. Les informations concernant 
-              la certification halal sont fournies par les établissements eux-mêmes ou par les utilisateurs de la plateforme. 
-              SAHABA ne peut garantir l'exactitude de ces informations et recommande aux utilisateurs de vérifier 
-              directement auprès des établissements ou des organismes certificateurs officiels.
-            </p>
-          </div>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">6. Responsabilité</h2>
-          <p className="text-slate-600 mb-4">
-            SAHABA s'efforce de fournir des informations aussi précises que possible. Toutefois, elle ne pourra être 
-            tenue responsable des omissions, des inexactitudes et des carences dans la mise à jour, qu'elles soient 
-            de son fait ou du fait des tiers partenaires qui lui fournissent ces informations.
-          </p>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">7. Droit applicable</h2>
-          <p className="text-slate-600 mb-4">
-            Les présentes mentions légales sont soumises au droit belge. En cas de litige, les tribunaux de Bruxelles 
-            seront seuls compétents.
-          </p>
-
-          <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">8. Contact</h2>
-          <p className="text-slate-600 mb-4">
-            Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à :<br />
-            Email : legal@sahaba.be<br />
-            Adresse : SAHABA SPRL, 123 Avenue de la Constitution, 1000 Bruxelles
-          </p>
-        </div>
-
-        {/* Last update */}
-        <div className="mt-8 pt-6 border-t border-slate-200">
-          <p className="text-sm text-slate-500">
-            Dernière mise à jour : Janvier 2025
-          </p>
-        </div>
-      </div>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <Link to="/" className="inline-flex items-center gap-2 mb-6 text-forest"><ArrowLeft className="w-4 h-4" />Retour à l'accueil</Link>
+      <nav className="flex gap-4 text-sm mb-6">
+        {Object.entries(PAGES).map(([k, v]) => <Link key={k} to={`/legal/${k}`} className={k === page ? "font-semibold underline" : "text-slate-500"}>{v.title.split(" (")[0]}</Link>)}
+      </nav>
+      <h1 className="font-display text-3xl font-bold mb-6">{doc.title}</h1>
+      <div className="space-y-5">{doc.body.map((s) => <section key={s.h}><h2 className="font-semibold mb-1">{s.h}</h2><p className="text-slate-700">{s.p}</p></section>)}</div>
+      <p className="mt-8 text-xs text-slate-400">Dernière mise à jour : {new Date().toLocaleDateString("fr-BE")}. Texte indicatif : à faire valider avant publication.</p>
     </div>
   );
 }

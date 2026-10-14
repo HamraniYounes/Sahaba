@@ -1,12 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SAHABA - Lieux Halal Certifiés</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#476E55" />
+    <meta name="description" content="Sahaba : l'annuaire communautaire des lieux halal et musulmans d'Europe." />
+    <title>SAHABA – Annuaire halal et musulman d'Europe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      try {
+        var t = localStorage.getItem("sahaba-theme");
+        if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.classList.add("dark");
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <div id="google_translate_element" style="display:none"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

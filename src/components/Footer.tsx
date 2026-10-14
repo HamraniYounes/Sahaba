@@ -1,67 +1,27 @@
-import { Page } from "../types";
-import { MapPin, Mail, Phone } from "lucide-react";
+import { Link } from "react-router-dom";
 
-interface FooterProps {
-  onNavigate: (page: Page) => void;
-}
-
-export function Footer({ onNavigate }: FooterProps) {
+export function Footer() {
   return (
-    <footer className="bg-slate-900 text-white mt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#D4A843' }}>
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span className="text-xl font-bold">SAHABA</span>
-            </div>
-            <p className="text-slate-400 text-sm mb-4">
-              La plateforme communautaire pour trouver les lieux conformes à l'éthique musulmane.
-            </p>
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <MapPin className="w-4 h-4" style={{ color: '#D4A843' }} />
-              <span>Bruxelles, Belgique</span>
-            </div>
+    <footer className="bg-slate-900 text-slate-300 mt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-7 h-7 rounded-lg bg-gold flex items-center justify-center text-white font-bold">S</div>
+            <span className="text-white font-bold">SAHABA</span>
           </div>
-
-          {/* Links */}
-          <div>
-            <h4 className="font-semibold mb-4" style={{ color: '#D4A843' }}>Navigation</h4>
-            <ul className="space-y-2">
-              <li><button onClick={() => onNavigate("home")} className="text-slate-400 hover:text-white transition-colors text-sm">Accueil</button></li>
-              <li><button onClick={() => onNavigate("propose")} className="text-slate-400 hover:text-white transition-colors text-sm">Proposer un lieu</button></li>
-              <li><button onClick={() => onNavigate("about")} className="text-slate-400 hover:text-white transition-colors text-sm">À propos</button></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4" style={{ color: '#D4A843' }}>Légal</h4>
-            <ul className="space-y-2">
-              <li><button onClick={() => onNavigate("legal")} className="text-slate-400 hover:text-white transition-colors text-sm">Mentions légales</button></li>
-              <li><button onClick={() => onNavigate("legal")} className="text-slate-400 hover:text-white transition-colors text-sm">Politique de confidentialité</button></li>
-              <li><button onClick={() => onNavigate("legal")} className="text-slate-400 hover:text-white transition-colors text-sm">CGU</button></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4" style={{ color: '#D4A843' }}>Contact</h4>
-            <ul className="space-y-2">
-              <li className="flex items-center gap-2 text-slate-400 text-sm">
-                <Mail className="w-4 h-4" /> contact@sahaba.be
-              </li>
-              <li className="flex items-center gap-2 text-slate-400 text-sm">
-                <Phone className="w-4 h-4" /> +32 2 123 45 67
-              </li>
-            </ul>
-          </div>
+          <p className="text-sm max-w-xs">L'annuaire communautaire des lieux halal et adaptés en Belgique.</p>
         </div>
-
-        <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-500 text-sm">
-          <p>© 2025 SAHABA. Tous droits réservés.</p>
-        </div>
+        <ul className="text-sm space-y-2">
+          <li><Link className="hover:text-white" to="/about">À propos</Link></li>
+          <li><Link className="hover:text-white" to="/submit">Proposer un lieu</Link></li>
+          <li><Link className="hover:text-white" to="/contact">Contact</Link></li>
+          <li><Link className="hover:text-white" to="/legal/mentions">Mentions légales</Link></li>
+          <li><Link className="hover:text-white" to="/legal/cgu">CGU</Link></li>
+          <li><Link className="hover:text-white" to="/legal/rgpd">Confidentialité (RGPD)</Link></li>
+        </ul>
+      </div>
+      <div className="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        © {new Date().getFullYear()} Sahaba. Tous droits réservés.
       </div>
     </footer>
   );

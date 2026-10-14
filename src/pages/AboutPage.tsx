@@ -1,16 +1,13 @@
-import { Page } from "../types";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { ArrowLeft, Shield, Users, MapPin, Heart, Check, Star } from "lucide-react";
+import { ArrowLeft, Shield, Users, MapPin, Check } from "lucide-react";
 
-interface AboutPageProps {
-  onNavigate: (page: Page) => void;
-}
-
-export function AboutPage({ onNavigate }: AboutPageProps) {
+export function AboutPage() {
+  const navigate = useNavigate();
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <button
-        onClick={() => onNavigate("home")}
+        onClick={() => navigate("/")}
         className="flex items-center gap-2 mb-8 transition-colors"
         style={{ color: '#476E55' }}
       >
@@ -121,7 +118,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
-            onClick={() => onNavigate("register")}
+            onClick={() => navigate("/register")}
             className="text-slate-900 font-medium border-0"
             style={{ backgroundColor: '#D4A843' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c49a3c'}
@@ -130,7 +127,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
             Créer un compte
           </Button>
           <Button
-            onClick={() => onNavigate("propose")}
+            onClick={() => navigate("/submit")}
             variant="outline"
             className="text-white border-white hover:bg-white/10"
           >

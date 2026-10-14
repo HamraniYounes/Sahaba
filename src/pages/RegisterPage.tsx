@@ -1,190 +1,76 @@
 import { useState } from "react";
-import { Page, User } from "../types";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthCard, FormMessage } from "../components/AuthCard";
+import { GoogleButton } from "../components/GoogleButton";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { ArrowLeft, Mail, Lock, User as UserIcon, Eye, EyeOff, Check } from "lucide-react";
+import { Input, Label } from "../components/ui/input";
+import { useAuth } from "../context/AuthContext";
 
-interface RegisterPageProps {
-  onNavigate: (page: Page) => void;
-  onLogin: (user: User) => void;
-}
-
-export function RegisterPage({ onNavigate, onLogin }: RegisterPageProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    acceptTerms: false,
-  });
-  const [showPassword, setShowPassword] = useState(false);
+/** Inscription en 2 étapes : formulaire → code OTP reçu par email (Supabase « Confirm signup »). */
+export function RegisterPage() {
+  const { signUp, verifySignUpOtp, resendSignUpOtp } = useAuth();
+  const navigate = useNavigate();
+  const [step, setStep] = useState<"form" | "otp">("form");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password) {
-      setError("Veuillez remplir tous les champs");
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
-      return;
-    }
-    if (!formData.acceptTerms) {
-      setError("Veuillez accepter les conditions d'utilisation");
-      return;
-    }
-    onLogin({
-      id: "1",
-      name: formData.name,
-      email: formData.email,
-      role: "USER",
-    });
+    setError(""); setInfo("");
+    if (password.length < 8) return setError("Le mot de passe doit contenir au moins 8 caractères.");
+    if (password !== confirm) return setError("Les mots de passe ne correspondent pas.");
+    setBusy(true);
+    try {
+      const { needsConfirmation } = await signUp(name.trim(), email.trim(), password);
+      if (needsConfirmation) setStep("otp"); else navigate("/", { replace: true });
+    } catch (err) { setError((err as Error).message); }
+    finally { setBusy(false); }
   };
 
-  return (
-    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12" style={{ backgroundColor: '#D4A843' + '08' }}>
-      <div className="w-full max-w-md">
-        <button
-          onClick={() => onNavigate("home")}
-          className="flex items-center gap-2 mb-6 transition-colors"
-          style={{ color: '#476E55' }}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Retour à l'accueil
-        </button>
+  const verify = async (e: React.FormEvent) => {
+    e.preventDefault(); setError(""); setInfo(""); setBusy(true);
+    try { await verifySignUpOtp(email.trim(), code); navigate("/", { replace: true }); }
+    catch (err) { setError((err as Error).message); }
+    finally { setBusy(false); }
+  };
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#D4A843' }}>
-              <span className="text-white font-bold text-xl">S</span>
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">Créer un compte</h1>
-            <p className="text-slate-600">Rejoignez la communauté SAHABA</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name" className="text-slate-700 font-medium">Nom complet</Label>
-              <div className="relative mt-1">
-                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Votre nom"
-                  className="pl-10 border-slate-200 text-slate-900 placeholder-slate-400"
-                  style={{ backgroundColor: '#476E55', color: 'white' }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="email" className="text-slate-700 font-medium">Adresse email</Label>
-              <div className="relative mt-1">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="votre@email.com"
-                  className="pl-10 border-slate-200 text-slate-900 placeholder-slate-400"
-                  style={{ backgroundColor: '#476E55', color: 'white' }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="text-slate-700 font-medium">Mot de passe</Label>
-              <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10 border-slate-200 text-slate-900 placeholder-slate-400"
-                  style={{ backgroundColor: '#476E55', color: 'white' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="confirmPassword" className="text-slate-700 font-medium">Confirmer le mot de passe</Label>
-              <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  placeholder="••••••••"
-                  className="pl-10 border-slate-200 text-slate-900 placeholder-slate-400"
-                  style={{ backgroundColor: '#476E55', color: 'white' }}
-                />
-              </div>
-            </div>
-
-            {error && (
-              <p className="text-red-600 text-sm">{error}</p>
-            )}
-
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.acceptTerms}
-                onChange={(e) => setFormData({ ...formData, acceptTerms: e.target.checked })}
-                className="w-5 h-5 rounded border-slate-300 mt-0.5"
-                style={{ accentColor: '#D4A843' }}
-              />
-              <span className="text-sm text-slate-600">
-                J'accepte les{" "}
-                <button type="button" onClick={() => onNavigate("legal")} className="font-medium hover:underline" style={{ color: '#D4A843' }}>
-                  conditions d'utilisation
-                </button>{" "}
-                et la{" "}
-                <button type="button" onClick={() => onNavigate("legal")} className="font-medium hover:underline" style={{ color: '#D4A843' }}>
-                  politique de confidentialité
-                </button>
-              </span>
-            </label>
-
-            <Button
-              type="submit"
-              className="w-full text-white border-0 font-medium py-3"
-              style={{ backgroundColor: '#D4A843' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c49a3c'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#D4A843'}
-            >
-              Créer mon compte
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-slate-600">
-              Déjà un compte ?{" "}
-              <button
-                onClick={() => onNavigate("login")}
-                className="font-medium hover:underline"
-                style={{ color: '#D4A843' }}
-              >
-                Se connecter
-              </button>
-            </p>
-          </div>
+  if (step === "otp") {
+    return (
+      <AuthCard title="Vérifiez votre email" subtitle={`Nous avons envoyé un code de confirmation à ${email}.`}>
+        <form onSubmit={verify} className="space-y-4">
+          <div><Label htmlFor="code">Code de vérification</Label>
+            <Input id="code" inputMode="numeric" autoComplete="one-time-code" required value={code} onChange={(e) => setCode(e.target.value)} className="tracking-widest text-center text-lg" /></div>
+          <FormMessage error={error} info={info} />
+          <Button type="submit" className="w-full" disabled={busy}>{busy ? "Vérification…" : "Valider"}</Button>
+        </form>
+        <div className="mt-4 flex justify-between text-sm">
+          <button className="text-forest underline" onClick={async () => { setError(""); try { await resendSignUpOtp(email.trim()); setInfo("Un nouveau code vient d'être envoyé."); } catch (e) { setError((e as Error).message); } }}>Renvoyer le code</button>
+          <button className="text-slate-500 underline" onClick={() => setStep("form")}>Modifier mon email</button>
         </div>
-      </div>
-    </div>
+      </AuthCard>
+    );
+  }
+
+  return (
+    <AuthCard title="Créer un compte" subtitle="Rejoignez la communauté Sahaba.">
+      <GoogleButton onError={setError} />
+      <div className="my-4 flex items-center gap-3 text-xs text-slate-400"><span className="h-px flex-1 bg-slate-200" />ou<span className="h-px flex-1 bg-slate-200" /></div>
+      <form onSubmit={submit} className="space-y-4">
+        <div><Label htmlFor="name">Nom</Label><Input id="name" required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div><Label htmlFor="email">Email</Label><Input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+        <div><Label htmlFor="pw">Mot de passe</Label><Input id="pw" type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+        <div><Label htmlFor="pw2">Confirmer le mot de passe</Label><Input id="pw2" type="password" required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></div>
+        <p className="text-xs text-slate-500">En vous inscrivant, vous acceptez les <Link className="underline" to="/legal/cgu">CGU</Link> et la <Link className="underline" to="/legal/rgpd">politique de confidentialité</Link>.</p>
+        <FormMessage error={error} />
+        <Button type="submit" className="w-full" disabled={busy}>{busy ? "Création…" : "S'inscrire"}</Button>
+      </form>
+      <p className="mt-4 text-sm text-center">Déjà inscrit ? <Link to="/login" className="text-forest underline">Se connecter</Link></p>
+    </AuthCard>
   );
 }

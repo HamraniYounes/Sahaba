@@ -1,165 +1,86 @@
-import { Page, User } from "../types";
-import { Button } from "./ui/button";
-import { Search, Menu, X, User as UserIcon, LogOut, MapPin } from "lucide-react";
 import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { LogOut, Menu, ShieldCheck, User as UserIcon, X } from "lucide-react";
+import { Button } from "./ui/button";
+import { useAuth } from "../context/AuthContext";
+import { ThemeToggle } from "./ThemeToggle";
+import { LanguageSelector } from "./LanguageSelector";
 
-interface HeaderProps {
-  onNavigate: (page: Page) => void;
-  user: User | null;
-  onLogout: () => void;
-}
+export function Header() {
+  const { user, signOut, isModerator } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
 
-export function Header({ onNavigate, user, onLogout }: HeaderProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const link = ({ isActive }: { isActive: boolean }) =>
+    `transition-colors ${isActive ? "text-slate-900 font-medium" : "text-slate-600 hover:text-slate-900"}`;
+  const close = () => setOpen(false);
+  const logout = async () => { close(); await signOut(); navigate("/"); };
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <button
-            onClick={() => onNavigate("home")}
-            className="flex items-center gap-2"
-          >
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#D4A843' }}>
-              <span className="text-white font-bold text-lg">S</span>
-            </div>
-            <span className="text-xl font-bold text-slate-900">SAHABA</span>
-          </button>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            <button
-              onClick={() => onNavigate("home")}
-              className="text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              Accueil
-            </button>
-            <button
-              onClick={() => onNavigate("about")}
-              className="text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              À propos
-            </button>
-            <button
-              onClick={() => onNavigate("propose")}
-              className="text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              Proposer un lieu
-            </button>
-          </nav>
-
-          {/* User Actions */}
-          <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <>
-                <button
-                  onClick={() => onNavigate("dashboard")}
-                  className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
-                >
-                  <UserIcon className="w-5 h-5" />
-                  <span>{user.name}</span>
-                </button>
-                <button
-                  onClick={onLogout}
-                  className="flex items-center gap-1 text-slate-500 hover:text-slate-700 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Déconnexion
-                </button>
-              </>
-            ) : (
-              <>
-                <Button
-                  onClick={() => onNavigate("login")}
-                  variant="ghost"
-                  className="text-slate-600"
-                >
-                  Connexion
-                </Button>
-                <Button
-                  onClick={() => onNavigate("register")}
-                  className="text-white border-0"
-                  style={{ backgroundColor: '#D4A843' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c49a3c'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#D4A843'}
-                >
-                  Inscription
-                </Button>
-              </>
-            )}
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-[1000]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+        <Link to="/" className="flex items-center gap-2" onClick={close}>
+          <div className="w-8 h-8 rounded-lg bg-gold flex items-center justify-center">
+            <span className="text-white font-bold text-lg">S</span>
           </div>
+          <span className="text-xl font-bold">SAHABA</span>
+        </Link>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-slate-600"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+        <nav className="hidden md:flex items-center gap-6">
+          <NavLink to="/" end className={link}>Accueil</NavLink>
+          <NavLink to="/about" className={link}>À propos</NavLink>
+          <NavLink to="/submit" className={link}>Proposer un lieu</NavLink>
+          {isModerator && <NavLink to="/admin" className={link}>Administration</NavLink>}
+        </nav>
+
+        <div className="hidden md:flex items-center gap-3">
+          <LanguageSelector />
+          <ThemeToggle />
+          {user ? (
+            <>
+              <Link to="/profile" className="flex items-center gap-2 text-slate-600 hover:text-slate-900">
+                {isModerator ? <ShieldCheck className="w-5 h-5" /> : <UserIcon className="w-5 h-5" />}
+                {user.name || "Mon compte"}
+              </Link>
+              <Button variant="outline" onClick={logout}><LogOut className="w-4 h-4" />Déconnexion</Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" onClick={() => navigate("/login")}>Connexion</Button>
+              <Button onClick={() => navigate("/register")}>Inscription</Button>
+            </>
+          )}
         </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-slate-200">
-            <nav className="flex flex-col gap-3">
-              <button
-                onClick={() => { onNavigate("home"); setMobileMenuOpen(false); }}
-                className="text-left px-2 py-2 text-slate-600 hover:text-slate-900"
-              >
-                Accueil
-              </button>
-              <button
-                onClick={() => { onNavigate("about"); setMobileMenuOpen(false); }}
-                className="text-left px-2 py-2 text-slate-600 hover:text-slate-900"
-              >
-                À propos
-              </button>
-              <button
-                onClick={() => { onNavigate("propose"); setMobileMenuOpen(false); }}
-                className="text-left px-2 py-2 text-slate-600 hover:text-slate-900"
-              >
-                Proposer un lieu
-              </button>
-              <div className="border-t border-slate-200 pt-3 mt-2">
-                {user ? (
-                  <>
-                    <button
-                      onClick={() => { onNavigate("dashboard"); setMobileMenuOpen(false); }}
-                      className="text-left px-2 py-2 text-slate-600 hover:text-slate-900 w-full"
-                    >
-                      Mon compte
-                    </button>
-                    <button
-                      onClick={() => { onLogout(); setMobileMenuOpen(false); }}
-                      className="text-left px-2 py-2 text-slate-500 hover:text-slate-700 w-full"
-                    >
-                      Déconnexion
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      onClick={() => { onNavigate("login"); setMobileMenuOpen(false); }}
-                      variant="ghost"
-                      className="w-full justify-start text-slate-600"
-                    >
-                      Connexion
-                    </Button>
-                    <Button
-                      onClick={() => { onNavigate("register"); setMobileMenuOpen(false); }}
-                      className="w-full mt-2 text-white border-0"
-                      style={{ backgroundColor: '#D4A843' }}
-                    >
-                      Inscription
-                    </Button>
-                  </>
-                )}
-              </div>
-            </nav>
-          </div>
-        )}
+        <div className="md:hidden flex items-center gap-1">
+          <ThemeToggle />
+          <button className="p-2" onClick={() => setOpen(!open)} aria-label="Menu">
+            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
+
+      {open && (
+        <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 flex flex-col gap-3">
+          <LanguageSelector />
+          <Link to="/" onClick={close}>Accueil</Link>
+          <Link to="/about" onClick={close}>À propos</Link>
+          <Link to="/submit" onClick={close}>Proposer un lieu</Link>
+          {isModerator && <Link to="/admin" onClick={close}>Modération</Link>}
+          {user ? (
+            <>
+              <Link to="/profile" onClick={close}>Mon profil</Link>
+              <Link to="/favorites" onClick={close}>Favoris</Link>
+              <button className="text-left" onClick={logout}>Déconnexion</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" onClick={close}>Connexion</Link>
+              <Link to="/register" onClick={close}>Inscription</Link>
+            </>
+          )}
+        </div>
+      )}
     </header>
   );
 }
