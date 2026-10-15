@@ -15,6 +15,7 @@ export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [asOwner, setAsOwner] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
@@ -27,7 +28,7 @@ export function RegisterPage() {
     if (password !== confirm) return setError("Les mots de passe ne correspondent pas.");
     setBusy(true);
     try {
-      const { needsConfirmation } = await signUp(name.trim(), email.trim(), password);
+      const { needsConfirmation } = await signUp(name.trim(), email.trim(), password, asOwner);
       if (needsConfirmation) setStep("otp"); else navigate("/", { replace: true });
     } catch (err) { setError((err as Error).message); }
     finally { setBusy(false); }
@@ -66,6 +67,10 @@ export function RegisterPage() {
         <div><Label htmlFor="email">Email</Label><Input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
         <div><Label htmlFor="pw">Mot de passe</Label><Input id="pw" type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} /></div>
         <div><Label htmlFor="pw2">Confirmer le mot de passe</Label><Input id="pw2" type="password" required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></div>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-1" checked={asOwner} onChange={(e) => setAsOwner(e.target.checked)} />
+          <span>Je suis propriétaire ou gérant d'un établissement <span className="block text-xs text-slate-500">Vous pourrez réclamer votre fiche ; elle sera modifiable après vérification par notre équipe.</span></span>
+        </label>
         <p className="text-xs text-slate-500">En vous inscrivant, vous acceptez les <Link className="underline" to="/legal/cgu">CGU</Link> et la <Link className="underline" to="/legal/rgpd">politique de confidentialité</Link>.</p>
         <FormMessage error={error} />
         <Button type="submit" className="w-full" disabled={busy}>{busy ? "Création…" : "S'inscrire"}</Button>

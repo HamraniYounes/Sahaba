@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import type { Location } from "../types";
 
 export function ClaimDialog({ location, onClose, onDone }: { location: Location; onClose: () => void; onDone: () => void }) {
-  const { user } = useAuth();
+  const { user, canClaim, becomeOwner } = useAuth();
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
@@ -25,9 +25,20 @@ export function ClaimDialog({ location, onClose, onDone }: { location: Location;
     catch (err) { setError((err as Error).message); } finally { setBusy(false); }
   };
 
+  const upgrade = async () => {
+    setBusy(true); setError("");
+    try { await becomeOwner(); } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
+  };
+
   return (
     <Modal title={transfer ? "Demander le transfert de propriété" : "Réclamer ce lieu"} onClose={onClose}>
-      {done ? (
+      {!canClaim ? (
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600">Seuls les comptes <b>propriétaire</b> peuvent réclamer un lieu. Passez votre compte en propriétaire : cela ne donne aucun droit sur une fiche tant que la modération n'a pas validé votre réclamation.</p>
+          <FormMessage error={error} />
+          <div className="flex gap-2"><Button disabled={busy} onClick={upgrade}>{busy ? "…" : "Je suis propriétaire ou gérant"}</Button><Button variant="outline" onClick={onClose}>Annuler</Button></div>
+        </div>
+      ) : done ? (
         <div className="space-y-4"><FormMessage info="Votre demande a été envoyée. Nous reviendrons vers vous après vérification." /><Button onClick={onClose}>Fermer</Button></div>
       ) : (
         <form onSubmit={submit} className="space-y-4">

@@ -5,6 +5,7 @@ import { Input, Label, Textarea } from "./ui/input";
 import { FormMessage } from "./AuthCard";
 import { DAYS, META_KEYS, META_LABELS, PRICE_LABELS } from "../lib/labels";
 import { fetchCategories, uploadPhoto, type LocationInput } from "../lib/api";
+import { safeHttpUrl } from "../lib/url";
 import type { Category, DayKey, Location, MetaKey, OpeningHours } from "../types";
 
 const MAX_PHOTOS = 6;
@@ -80,6 +81,7 @@ export function LocationForm({ userId, initial, submitLabel, onSubmit }: Props) 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!f.categoryId) return setError("Choisissez une catégorie.");
+    if (f.website.trim() && !safeHttpUrl(f.website)) return setError("Le site web doit commencer par http:// ou https://.");
     setBusy(true); setError("");
     const addressChanged = !initial || initial.address !== f.address || initial.city !== f.city || (initial.postalCode ?? "") !== f.postalCode || initial.country !== f.country;
     try {

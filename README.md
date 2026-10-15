@@ -9,7 +9,8 @@ Aucune dépendance à base44.
 ## Mise en route
 
 1. Créez un projet sur https://supabase.com.
-2. **SQL Editor** : exécutez `supabase/migrations/20260601000000_sahaba_schema.sql` (ou `supabase db push`).
+2. **SQL Editor** : exécutez dans l'ordre `20260601000000_sahaba_schema.sql` puis `20260602000000_owner_role.sql`
+   (ou `supabase db push`).
    Le fichier peut être rejoué sans risque : il crée les tables, la sécurité par ligne (RLS), les fonctions, les deux
    buckets de stockage (`location-photos` public, `claim-documents` privé), les 27 catégories et 4 lieux d'exemple.
 3. `cp .env.example .env`, puis renseignez `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` (Project Settings → API).
@@ -36,8 +37,17 @@ update public.profiles set role = 'ADMIN'
 where id = (select id from auth.users where email = 'vous@exemple.com');
 ```
 
-Rôles : `USER`, `MODERATOR` (modération, signalements, réclamations), `ADMIN` (en plus : utilisateurs et publicité).
-L'admin peut ensuite changer les rôles dans `/admin/users`.
+Rôles : `USER`, `OWNER` (propriétaire : peut réclamer un lieu), `MODERATOR` (modération, signalements, réclamations),
+`ADMIN` (en plus : utilisateurs et publicité). L'admin peut ensuite changer les rôles dans `/admin/users`.
+
+### Rôle propriétaire (OWNER)
+
+1. Le compte devient `OWNER` à l'inscription (case « Je suis propriétaire ») ou via le bouton « Je gère un établissement »
+   du profil (fonction `become_owner()`).
+2. Un `OWNER` dépose une réclamation sur la fiche d'un lieu publié, avec justificatifs privés.
+3. Un modérateur l'approuve dans `/admin/claims` : le lieu passe `CLAIMED`, et **seulement alors** le propriétaire peut
+   modifier la fiche et répondre aux avis (appliqué par RLS, pas seulement dans l'interface).
+4. Le créateur d'une proposition ne peut la modifier que tant qu'elle est en attente ou refusée et sans propriétaire.
 
 ## Fonctionnalités
 

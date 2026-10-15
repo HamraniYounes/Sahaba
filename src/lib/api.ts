@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { isOpenNow, normalizeHours, distanceKm } from "./hours";
+import { safeHttpUrl } from "./url";
 import type {
   Ad, AdminUser, Category, Claim, Filters, Location, LocationMetadata, LocationStatus, ModerationSession,
   OpeningHours, OwnerReply, Report, ReportReason, Review, Role,
@@ -200,7 +201,7 @@ function toRow(i: LocationInput) {
   return {
     name: i.name.trim(), category_id: i.categoryId, address: i.address.trim(), city: i.city.trim(),
     postal_code: i.postalCode?.trim() || null, country: i.country?.trim() || "Belgique",
-    phone: i.phone?.trim() || null, email: i.email?.trim() || null, website: i.website?.trim() || null,
+    phone: i.phone?.trim() || null, email: i.email?.trim() || null, website: safeHttpUrl(i.website),
     description: i.description?.trim() || null,
     photo_url: i.photoUrl ?? null, photos: i.photos ?? [],
     opening_hours: i.openingHours ?? null, price_range: i.priceRange || null, metadata: i.metadata,
@@ -272,7 +273,7 @@ export async function fetchClaims(status: Claim["status"]): Promise<Claim[]> {
 }
 export async function approveClaim(id: string) { check(await supabase.rpc("approve_claim", { claim: id })); }
 export async function rejectClaim(id: string, note: string) {
-  check(await supabase.from("claims").update({ status: "rejected", admin_note: note.trim() || null }).eq("id", id));
+  check(await supabase.from("claims").update({ status: "rejected", admin_note: note.trim() || null }).eq("id", id).eq("status", "pending"));
 }
 export async function fetchMyPendingClaimLocationIds(userId: string): Promise<string[]> {
   const rows = unwrap(await supabase.from("claims").select("location_id").eq("user_id", userId).eq("status", "pending")) as Row[];
@@ -284,12 +285,12 @@ export async function fetchActiveAds(placement: "home" | "detail"): Promise<Ad[]
   const rows = unwrap(await supabase.from("ads").select("*").eq("active", true).in("placement", [placement, "both"]).order("created_at", { ascending: false })) as Row[];
   return (rows ?? []).map(mapAd);
 }
-const mapAd = (r: Row): Ad => ({ id: r.id, title: r.title, description: r.description, cta: r.cta, url: r.url, imageUrl: r.image_url, placement: r.placement, active: r.active });
+const mapAd = (r: Row): Ad => ({ id: r.id, title: r.title, description: r.description, cta: r.cta, url: safeHttpUrl(r.url), imageUrl: safeHttpUrl(r.image_url), placement: r.placement, active: r.active });
 export async function fetchAllAds(): Promise<Ad[]> {
   return ((unwrap(await supabase.from("ads").select("*").order("created_at", { ascending: false })) as Row[]) ?? []).map(mapAd);
 }
 export async function saveAd(ad: Partial<Ad> & { title: string }) {
-  const row = { title: ad.title, description: ad.description || null, cta: ad.cta || null, url: ad.url || null, image_url: ad.imageUrl || null, placement: ad.placement ?? "both", active: ad.active ?? true };
+  const row = { title: ad.title, description: ad.description || null, cta: ad.cta || null, url: safeHttpUrl(ad.url), image_url: safeHttpUrl(ad.imageUrl), placement: ad.placement ?? "both", active: ad.active ?? true };
   check(ad.id ? await supabase.from("ads").update(row).eq("id", ad.id) : await supabase.from("ads").insert(row));
 }
 export async function deleteAd(id: string) { check(await supabase.from("ads").delete().eq("id", id)); }

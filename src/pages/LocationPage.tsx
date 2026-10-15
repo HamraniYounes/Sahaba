@@ -13,6 +13,7 @@ import { ShareButtons } from "../components/ShareButtons";
 import { Button } from "../components/ui/button";
 import { fetchCategories, fetchLocationBySlug, fetchMyPendingClaimLocationIds, incrementView, updateLocation } from "../lib/api";
 import { formatSlots } from "../lib/hours";
+import { safeHttpUrl } from "../lib/url";
 import { activeBadges, DAYS, PRICE_LABELS } from "../lib/labels";
 import { useAuth } from "../context/AuthContext";
 import { useFavorites } from "../context/FavoritesContext";
@@ -55,7 +56,9 @@ export function LocationPage() {
     </div>
   );
 
-  const canEdit = !!user && (l.createdBy === user.id || l.ownerId === user.id || isModerator);
+  // propriétaire approuvé ou modérateur ; le créateur ne modifie que sa proposition non publiée et sans propriétaire
+  const canEdit = !!user && (isModerator || l.ownerId === user.id
+    || (l.createdBy === user.id && !l.ownerId && (l.status === "PENDING" || l.status === "REJECTED")));
   const isOwner = !!user && l.ownerId === user.id;
   const fav = ids.has(l.id);
   const photos = [l.photoUrl, ...l.photos].filter((x): x is string => !!x);
@@ -122,7 +125,7 @@ export function LocationPage() {
             <p className="flex gap-2"><MapPin className="w-4 h-4 mt-0.5 shrink-0" />{l.address}, {l.postalCode} {l.city}, {l.country}</p>
             {l.phone && <p className="flex gap-2"><Phone className="w-4 h-4 mt-0.5 shrink-0" /><a className="underline" href={`tel:${l.phone}`}>{l.phone}</a></p>}
             {l.email && <p className="flex gap-2"><Mail className="w-4 h-4 mt-0.5 shrink-0" /><a className="underline" href={`mailto:${l.email}`}>{l.email}</a></p>}
-            {l.website && <p className="flex gap-2"><ExternalLink className="w-4 h-4 mt-0.5 shrink-0" /><a className="underline break-all" href={l.website} target="_blank" rel="noreferrer noopener">{l.website}</a></p>}
+            {safeHttpUrl(l.website) && <p className="flex gap-2"><ExternalLink className="w-4 h-4 mt-0.5 shrink-0" /><a className="underline break-all" href={safeHttpUrl(l.website)!} target="_blank" rel="noreferrer noopener">{l.website}</a></p>}
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200 p-4">

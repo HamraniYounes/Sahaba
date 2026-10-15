@@ -7,7 +7,7 @@ interface AuthState {
   user: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<{ needsConfirmation: boolean }>;
+  signUp: (name: string, email: string, password: string, asOwner?: boolean) => Promise<{ needsConfirmation: boolean }>;
   verifySignUpOtp: (email: string, code: string) => Promise<void>;
   resendSignUpOtp: (email: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -15,7 +15,11 @@ interface AuthState {
   sendResetEmail: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /** Passe le compte USER en OWNER (réclamation de lieux). */
+  becomeOwner: () => Promise<void>;
   isModerator: boolean;
+  /** OWNER, modérateur ou admin : peut déposer une réclamation. */
+  canClaim: boolean;
 }
 
 const Ctx = createContext<AuthState | null>(null);
@@ -32,6 +36,9 @@ async function loadProfile(session: Session | null): Promise<Profile | null> {
   };
 }
 
+const sameProfile = (a: Profile | null, b: Profile | null) =>
+  a === b || (!!a && !!b && a.id === b.id && a.email === b.email && a.name === b.name && a.role === b.role && a.avatarUrl === b.avatarUrl);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(supabaseConfigured);
@@ -47,7 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // différé : pas d'appel Supabase directement dans le callback
       setTimeout(async () => {
         const p = await loadProfile(session);
-        if (active) setUser(p);
+        // évite de recréer l'objet user (et de relancer les effets qui en dépendent) à chaque rafraîchissement de jeton
+        if (active) setUser((prev) => (sameProfile(prev, p) ? prev : p));
       }, 0);
     });
     return () => { active = false; sub.subscription.unsubscribe(); };
@@ -62,14 +70,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     loading,
     isModerator: user?.role === "MODERATOR" || user?.role === "ADMIN",
+    canClaim: user?.role === "OWNER" || user?.role === "MODERATOR" || user?.role === "ADMIN",
     async signIn(email, password) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw new Error(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect." : error.message);
     },
-    async signUp(name, email, password) {
+    async signUp(name, email, password, asOwner = false) {
       const { data, error } = await supabase.auth.signUp({
         email, password,
-        options: { data: { name }, emailRedirectTo: window.location.origin },
+        options: { data: { name, ...(asOwner ? { account_type: "owner" } : {}) }, emailRedirectTo: window.location.origin },
       });
       if (error) throw new Error(error.message);
       return { needsConfirmation: !data.session };
@@ -96,6 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw new Error(error.message);
     },
     refreshProfile,
+    async becomeOwner() {
+      const { error } = await supabase.rpc("become_owner");
+      if (error) throw new Error(error.message);
+      await refreshProfile();
+    },
   }), [user, loading, refreshProfile]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

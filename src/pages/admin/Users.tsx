@@ -29,7 +29,7 @@ export function Users() {
               <td className="px-3 py-2">
                 <select value={u.role} disabled={u.id === user?.id} onChange={async (e) => { try { await setUserRole(u.id, e.target.value as Role); load(); } catch (err) { setError((err as Error).message); } }}
                   className="rounded-lg border border-slate-300 bg-white px-2 py-1">
-                  <option value="USER">Utilisateur</option><option value="MODERATOR">Modérateur</option><option value="ADMIN">Admin</option></select>
+                  <option value="USER">Utilisateur</option><option value="OWNER">Propriétaire</option><option value="MODERATOR">Modérateur</option><option value="ADMIN">Admin</option></select>
               </td>
             </tr>))}</tbody>
         </table>

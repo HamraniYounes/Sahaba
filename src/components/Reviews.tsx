@@ -23,7 +23,7 @@ export function Reviews({ location: l, onChanged }: { location: Location; onChan
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
     const mine = reviews.find((r) => r.userId === user?.id);
-    if (mine) { setRating(mine.rating); setComment(mine.comment ?? ""); }
+    setRating(mine?.rating ?? 0); setComment(mine?.comment ?? "");
   }, [reviews, user?.id]);
 
   const run = async (fn: () => Promise<void>) => {
@@ -42,6 +42,7 @@ export function Reviews({ location: l, onChanged }: { location: Location; onChan
   return (
     <section>
       <h2 className="font-display text-xl font-bold mb-3">Avis ({reviews.length})</h2>
+      {isOwner ? <p className="mb-6 text-sm text-slate-500">Vous êtes propriétaire de ce lieu : vous pouvez répondre aux avis mais pas en publier un.</p> : (
       <form onSubmit={submit} className="space-y-2 mb-6 bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex gap-1" role="radiogroup" aria-label="Note">
           {[1, 2, 3, 4, 5].map((n) => (
@@ -53,7 +54,7 @@ export function Reviews({ location: l, onChanged }: { location: Location; onChan
         <Textarea rows={2} placeholder={user ? "Votre commentaire (facultatif)" : "Connectez-vous pour laisser un avis"} value={comment} onChange={(e) => setComment(e.target.value)} disabled={!user} maxLength={1000} />
         {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
         <Button type="submit" disabled={busy}>{user ? "Publier mon avis" : "Se connecter"}</Button>
-      </form>
+      </form>)}
 
       {reviews.length === 0 ? <p className="text-sm text-slate-500">Aucun avis pour le moment.</p> : (
         <ul className="space-y-5">

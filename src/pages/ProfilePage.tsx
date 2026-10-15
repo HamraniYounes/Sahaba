@@ -14,7 +14,7 @@ import type { Location } from "../types";
 type Tab = "favorites" | "reviews" | "owner" | "places";
 
 export function ProfilePage() {
-  const { user, refreshProfile, isModerator } = useAuth();
+  const { user, refreshProfile, isModerator, becomeOwner } = useAuth();
   const { ids } = useFavorites();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("favorites");
@@ -43,6 +43,10 @@ export function ProfilePage() {
     try { await updateProfileName(user.id, name); await refreshProfile(); setMsg({ error: "", info: "Profil mis à jour." }); }
     catch (err) { setMsg({ error: (err as Error).message, info: "" }); }
   };
+  const upgrade = async () => {
+    try { await becomeOwner(); setMsg({ error: "", info: "Votre compte est maintenant un compte propriétaire : vous pouvez réclamer vos établissements." }); }
+    catch (err) { setMsg({ error: (err as Error).message, info: "" }); }
+  };
   const del = async () => {
     setDeleting(true);
     try { await deleteMyAccount(); navigate("/", { replace: true }); }
@@ -65,6 +69,7 @@ export function ProfilePage() {
           {badge.next && <p className="text-xs text-slate-500 mt-1">Prochain badge : {badge.next}</p>}
         </div>
         {isModerator && <Link to="/admin"><Button variant="outline">Espace modération</Button></Link>}
+        {user.role === "USER" && <Button variant="outline" onClick={upgrade}>Je gère un établissement</Button>}
       </header>
 
       <div className="grid grid-cols-3 gap-3 text-center">
@@ -106,7 +111,7 @@ export function ProfilePage() {
                 <span className={`text-xs px-2.5 py-1 rounded-full ${STATUS_LABELS[l.status].cls}`}>{STATUS_LABELS[l.status].text}</span>
               </li>))}</ul>
           ))}
-          {tab === "owner" && (owned.length === 0 ? <p className="text-sm text-slate-500">Vous n'êtes propriétaire d'aucun lieu. Ouvrez la fiche de votre établissement pour le réclamer.</p> : (
+          {tab === "owner" && (owned.length === 0 ? <p className="text-sm text-slate-500">Vous n’êtes propriétaire d’aucun lieu. {user.role === "USER" ? "Cliquez sur « Je gère un établissement », puis" : "Ouvrez"} la fiche de votre établissement pour le réclamer ; vous pourrez la modifier dès que la modération aura validé votre demande.</p> : (
             <ul className="space-y-2">{owned.map((l) => (
               <li key={l.id} className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-3">
                 <Link to={`/location/${l.slug}`} className="min-w-0"><p className="font-medium truncate">{l.name}</p>

@@ -1,4 +1,4 @@
-export type Role = "USER" | "MODERATOR" | "ADMIN";
+export type Role = "USER" | "OWNER" | "MODERATOR" | "ADMIN";
 export type LocationStatus = "PENDING" | "PUBLISHED" | "REJECTED" | "CLAIMED";
 
 export interface Profile {
